@@ -1,7 +1,7 @@
 ---
 title: 'Homework #3'
 author: "Advay Vyas"
-date: 2/12/25
+date: 2/13/25
 output:
   pdf_document:
     toc: true
@@ -26,57 +26,84 @@ library(stringr)
 library(boot)
 library(mosaic)
 ```
+
 # Introduction
+
 I'm Advay Vyas, EID: av37899, and this is my submission for SDS 315 Statistical Thinking Homework #3. The GitHub repository for my code is at this [link](https://github.com/advayvyas/SDSHW3).
 
 # Problem 1
+
 ```{r}
 gas = read.csv("GasPrices.csv")
 ```
 
 ## Theory A
+
 ```{r, cache=TRUE, message=FALSE}
 gasA_CI = confint((do(10000)*diffmean(Price~Competitors, data=mosaic::resample(gas)))$diffmean, level = 0.95)
 ```
-Gas stations charge more if they lack direct competition in sight.
+
+Claim: Gas stations charge more if they lack direct competition in sight.
+
+Evidence: The difference between gas station prices with and without direct competitors in sight is within the range of -0.0546 and 0.0077 with 95% confidence. This interval can also be interpreted as costing up to \~5 cents extra and up to \~1 cent less without direct competitors in sight. While the interval is more skewed towards the negative side (w/out competitors raises prices), the interval includes 0.
+
+Conclusion: Since the interval includes 0, it is highly probable that there is no significant conclusion to make from this evidence. Therefore, the theory is not supported by the data.
 
 ```{r}
-gasA_CI %>% round(4) %>% knitr::kable(row.names = FALSE)
+gasA_CI %>% round(4) %>% knitr::kable(row.names = FALSE, caption = "95% Confidence Interval Percentiles")
 ```
 
 ## Theory B
+
 ```{r, cache=TRUE, message=FALSE}
 gasB_CI = confint((do(10000)*lm(Price~Income, data=mosaic::resample(gas))), level = 0.95)
 ```
-The richer the area, the higher the gas prices.
 
-Used 10,000 to multiply by here.
+Claim: The richer the area, the higher the gas prices.
+
+Evidence: The slope of the line of best fit for gas station prices and median income in the zip code has a 95% confidence interval from 0.0066 to 0.0178 (multiplied by 10,000 for visibility). Therefore, for every $10,000 increase in median income, there is a 0.66-1.78 cent increase.
+
+Conclusion: While this interval has some slope/correlation indicating that median income in a zip code is related to gas prices, the result is mostly insignificant for any practical use. Therefore, the theory is not supported by the data.
+
 ```{r}
 gasB_CI[2,c(2,3)] %>% mutate(across(everything(), ~ . * 10000)) %>% 
-  round(4) %>%  rename('2.5%' = 'lower', '97.5%' = `upper`) %>% knitr::kable(row.names = FALSE)
+  round(4) %>%  rename('2.5%' = 'lower', '97.5%' = `upper`) %>% knitr::kable(row.names = FALSE, caption = "95% Confidence Interval Percentiles")
 ```
 
 ## Theory C
+
 ```{r, cache=TRUE, message=FALSE}
 gasC_CI = confint((do(10000)*diffmean(Price~Stoplight, data=mosaic::resample(gas)))$diffmean, level = 0.95)
 ```
-Gas stations at stoplights charge more.
+
+Claim: Gas stations at stoplights charge more.
+
+Evidence: The difference between gas station prices with and without a stoplight nearby is within the range of -0.0376 to 0.0296 with 95% confidence. This interval can also be interpreted as costing up to \~4 cents extra without stoplights and \~3 cents extra with stoplights.
+
+Conclusion: Since the interval is practically centered around 0, there seems to be no statistical significance. Therefore, the theory is not supported by the data.
 
 ```{r}
-gasC_CI %>% round(4) %>% knitr::kable(row.names = FALSE)
+gasC_CI %>% round(4) %>% knitr::kable(row.names = FALSE, caption = "95% Confidence Interval Percentiles")
 ```
 
 ## Theory D
+
 ```{r, cache=TRUE, message=FALSE}
 gasD_CI = confint((do(10000)*diffmean(Price~Highway, data=mosaic::resample(gas)))$diffmean, level = 0.95)
 ```
-Gas stations with direct highway access charge more.
+
+Claim: Gas stations with direct highway access charge more.
+
+Evidence: The increase in gas station prices from having direct highway access is within the range of 0.0094 to 0.0807 with 95% confidence. More generally, that means a range of \~1 cent to \~80 cents, which is quite significant.
+
+Conclusion: Since this interval also doesn't include 0 and since gas prices are usually in the range of 1-2 dollars, this trend seems statistically significant. Therefore, the evidence supports the trend that gas stations with direct highway access charge more.
 
 ```{r}
-gasD_CI %>% round(4) %>% knitr::kable(row.names = FALSE)
+gasD_CI %>% round(4) %>% knitr::kable(row.names = FALSE, caption = "95% Confidence Interval Percentiles")
 ```
 
 ## Theory E
+
 ```{r}
 gas$Shell = gas$Name == "Shell"
 ```
@@ -84,32 +111,43 @@ gas$Shell = gas$Name == "Shell"
 ```{r, cache=TRUE, message=FALSE}
 gasE_CI = confint((do(10000)*diffmean(Price~Shell, data=mosaic::resample(gas)))$diffmean, level = 0.95)
 ```
-Shell charges more than all other non-Shell brands.m
+
+Claim: Shell charges more than all other non-Shell brands.
+
+Evidence: The increase in gas station prices from Shell brands is within the range of -0.0095 to 0.0651 with 95% confidence. Therefore, that means Shell charges between a cent less to \~65 cents more most of the time.
+
+Conclusion: Even though this interval contains 0, it is mostly skewed towards the positive side and most likely suggests an increase in price due to Shell branding. Therefore, the evidence supports the trend and gas stations with Shell branding likely charge more than other non-Shell gas stations.
 
 ```{r}
-gasE_CI %>% round(4) %>% knitr::kable(row.names = FALSE)
+gasE_CI %>% round(4) %>% knitr::kable(row.names = FALSE, caption = "95% Confidence Interval Percentiles")
 ```
 
+\newpage
 
 # Problem 2
+
 ```{r}
 cars = read.csv("sclass.csv")
 ```
 
 ## Part A
+
 ```{r}
 carsA = cars %>% filter(year == 2011 & trim == '63 AMG') 
 ```
 
 ```{r, cache=TRUE, message=FALSE}
-carsA_CI = confint((do(10000)*mean(mosaic::resample(carsA)$price)), level = 0.95)
+carsA_CI = confint((do(10000)*mean(mosaic::resample(carsA)$mileage)), level = 0.95)
 ```
 
+The average mileage of 2011 Mercedes S-class 63 AMGs when hitting the used-car market on cars.com is within the range of 26,213.78 to 31,770.94 miles with 95% confidence.
+
 ```{r}
-carsA_CI[1,c(2,3)] %>% round(4) %>%  rename('2.5%' = 'lower', '97.5%' = `upper`) %>% knitr::kable(row.names = FALSE)
+carsA_CI[1,c(2,3)] %>% round(4) %>%  rename('2.5%' = 'lower', '97.5%' = `upper`) %>% knitr::kable(row.names = FALSE, caption = "95% Confidence Interval Percentiles")
 ```
 
 ## Part B
+
 ```{r}
 carsB = cars %>% filter(year == 2014 & trim == '550') %>% mutate(black = (color == "Black"))
 ```
@@ -118,16 +156,22 @@ carsB = cars %>% filter(year == 2014 & trim == '550') %>% mutate(black = (color 
 carsB_CI = confint((do(10000)*prop(~black, data=mosaic::resample(carsB))), level = 0.95)
 ```
 
+The proportion of all 2014 Mercedes S-Class 550s that are black is within the range of 0.4168 to 0.4531 (41.68%-45.31%) with 95% confidence.
+
 ```{r}
-carsB_CI[1,c(2,3)] %>% round(4) %>%  rename('2.5%' = 'lower', '97.5%' = `upper`) %>% knitr::kable(row.names = FALSE)
+carsB_CI[1,c(2,3)] %>% round(4) %>%  rename('2.5%' = 'lower', '97.5%' = `upper`) %>% knitr::kable(row.names = FALSE, caption = "95% Confidence Interval Percentiles")
 ```
 
+\newpage
+
 # Problem 3
+
 ```{r}
 shows = read.csv("nbc_pilotsurvey.csv")
 ```
 
 ## Part A
+
 ```{r}
 showsA = shows %>% filter(Show == 'Living with Ed' | Show == 'My Name is Earl')
 ```
@@ -136,11 +180,20 @@ showsA = shows %>% filter(Show == 'Living with Ed' | Show == 'My Name is Earl')
 showsA_CI = confint((do(10000)*diffmean(Q1_Happy~Show, data=mosaic::resample(showsA)))$diffmean, level = 0.95)
 ```
 
+Question: Does "Living with Ed" or "My Name is Earl" make people happier, through a higher average response from a viewer survey?
+
+Approach: To compute evidence for this question, I filtered out the shows to only include reviews for these two shows. Then, I computed the difference in means for Q1_Happy (the happy metric) between the two shows in 10,000 bootstrapped samples. Lastly, I computed a 95% confidence interval of those differences in means to find the average difference in the "happy metric" responses.
+
+Results: With more negative values indicating higher responses for "Living with Ed", the interval of the difference in means is -0.3974 to 0.1004 with 95% confidence. For context, the scale itself has a range of 1-5 for this metric.
+
 ```{r}
-showsA_CI %>% round(4) %>% knitr::kable(row.names = FALSE)
+showsA_CI %>% round(4) %>% knitr::kable(row.names = FALSE, caption = "95% Confidence Interval Percentiles")
 ```
 
+Conclusion: Therefore, we can assume that "Living with Ed" has generally higher Q1_Happy scores than "My Name is Earl" since the interval is negatively skewed. However, since the interval contains 0, it may not be statistically significant enough to warrant any definite conclusion.
+
 ## Part B
+
 ```{r}
 showsB = shows %>% filter(Show == "The Biggest Loser" | Show == "The Apprentice: Los Angeles")
 ```
@@ -149,11 +202,23 @@ showsB = shows %>% filter(Show == "The Biggest Loser" | Show == "The Apprentice:
 showsB_CI = confint((do(10000)*diffmean(Q1_Annoyed~Show, data=mosaic::resample(showsB)))$diffmean, level = 0.95)
 ```
 
+Question: Does "The Biggest Loser" or "The Apprentice: Los Angeles" make people feel more annoyed, through a higher average response on a viewer survey?
+
+Approach: To compute evidence for this question, I filtered out the shows to only include reviews for these two shows. Then, I computed the difference in means for Q1_Annoyed (the annoyance metric) between the two shows in 10,000 bootstrapped samples. Lastly, I computed a 95% confidence interval of those differences in means to find the average difference in the "annoyance metric" responses.
+
+Results: With more negative values indicating higher responses for "The Apprentice: Los Angeles", the interval of the difference in means is -0.5182 to -0.0174 with 95% confidence. For context, the scale itself has a range of 1-5 for this metric.
+
 ```{r}
-showsB_CI %>% round(4) %>% knitr::kable(row.names = FALSE)
+showsB_CI %>% round(4) %>% knitr::kable(row.names = FALSE, caption = "95% Confidence Interval Percentiles")
 ```
 
+Conclusion: Therefore, we can assume that "The Apprentice: Los Angeles" has generally higher Q1_Annoyed scores than "The Biggest Loser" since the interval is negatively skewed. Since the interval does not contain 0, it is very likely that there is a strong correlation. Therefore, "The Apprentice: Los Angeles" is more likely to annoy viewers than the "The Biggest Loser".
+
+
+\newpage
+
 ## Part C
+
 ```{r}
 showsC = shows %>% filter(Show == "Dancing with the Stars") %>% mutate(high_rating = (Q2_Confusing >= 4))
 ```
@@ -162,11 +227,22 @@ showsC = shows %>% filter(Show == "Dancing with the Stars") %>% mutate(high_rati
 showsC_CI = confint((do(10000)*prop(~high_rating, data=mosaic::resample(showsC))), level = 0.95)
 ```
 
+Question: How often do American TV watchers rate "Dancing with the Stars" a high rating (4-5) on a confusion metric which has a scale of 1-5?
+
+Approach: To compute evidence for this question, I filtered out the shows to only include reviews for "Dancing with the Stars". Then, I computed the proportion of survey respondents who scored Q2_Confusing (confusion metric) at a score of 4 or 5 in 10,000 bootstrapped samples. Lastly, I computed a 95% confidence interval of the proportion to find the average proportion of respondents who rated the confusion metric highly.
+
+Results: The interval for the proportion of highly confused viewers is from 0.0387 to 0.116, with 95% confidence. This means that ~4% to ~12% of American TV viewers are likely to rate a response of 4 or greater for the confusion metric.
+
 ```{r}
-showsC_CI[1,c(2,3)] %>% round(4) %>%  rename('2.5%' = 'lower', '97.5%' = `upper`) %>% knitr::kable(row.names = FALSE)
+showsC_CI[1,c(2,3)] %>% round(4) %>%  rename('2.5%' = 'lower', '97.5%' = `upper`) %>% knitr::kable(row.names = FALSE, caption = "95% Confidence Interval Percentiles")
 ```
 
+Conclusion: Therefore, we can assume that most samples of American TV viewers watching "Dancing with the Stars" will have approximately 4-12% likely being confused by some aspect of the show.
+
+\newpage
+
 # Problem 4
+
 ```{r}
 ebay = read.csv("ebay.csv")
 
@@ -177,6 +253,14 @@ ebay = ebay %>% mutate(ratio = (rev_after/rev_before))
 ebay_CI = confint((do(10000)*diffmean(ratio~adwords_pause, data=mosaic::resample(ebay)))$diffmean, level = 0.95)
 ```
 
+Question: Does paid search advertising on Google create extra revenue from eBay?
+
+Approach: To compute evidence for this question, I tabulated the ratio (0-1) of revenue after / revenue before to see how greatly it was affected. I then computed how that ratio was affected by if the paid advertising was on/off 10,000 times in bootstrapped samples. Next, I took a 95% confidence interval of those differences of means of ratios to see how much change there was.
+
+Results: With negative values indicating higher performance for the paid advertising, the interval of the difference of means in the ratio is -0.0904 to -0.0134, with 95% confidence. In percent form, that means the interval is the paid advertising ratio outperforming the organic ratio by 1%-9% out of 100%.
+
 ```{r}
-ebay_CI %>% round(4) %>% knitr::kable(row.names = FALSE)
+ebay_CI %>% round(4) %>% knitr::kable(row.names = FALSE, caption = "95% Confidence Interval Percentiles")
 ```
+
+Conclusion: Since the interval does not cross 0, this indicates that we are generally confident that there is an effect with paid advertising. However, the effect looks to be relatively minimal - on average, the paid advertising only outperforms by about 5% on the ratio over organic results. Therefore, for a site like eBay, there is no need to use paid advertising if the costs are steep because the return on investment is relatively low.
